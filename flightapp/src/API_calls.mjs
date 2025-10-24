@@ -1,6 +1,9 @@
 const api_key = process.env.FLIGHT_API_KEY
 const api_secret = process.env.API_SECRET
 const base_url = process.env.BASE_URL 
+const flight_version = process.env.VERSION_FLIGHT
+const hotel_version = process.env.VERSION_HOTEL
+
 /*
 Before we can make API calls we must must get the access tokens
 Our access keys are located in API.env please make sure your launch.json files 
@@ -12,10 +15,10 @@ and packages.json files are updated appropriately
 
 * @return {Promise<Object|null>} Token response JSON or null if failed.
 */
-export async function get_Token(
+export async function getToken(
 
 ) {
-    const token_extension = '/v1/security/oauth2/token`'
+    const token_extension = '/v1/security/oauth2/token'
     //POST request for access token
     try {
         
@@ -43,12 +46,15 @@ export async function get_Token(
 
 /*
 Function that checks if a value is null or undefined
+
+@params - None
+
+@returns - boolean that indicates if the value is un
 */
 function isNotNullNorUndefined(
     value
 ) {
-    return typeof value == "undefined" &&
-        (typeof value == "object" || value == null)
+    return value !== null && value !== undefined
 }
 
 /* 
@@ -66,44 +72,57 @@ The purpose of this function is to properly formate the json object to feed into
               A full list of codes can be found https://www.iata.org/en/publications/directories/code-search/
               Dates are strings formatted "YYYY-MM-DD""
               The departure day of the previous destination will be the same as the arival date of the new 
-              But im giving the algorithm a 2 day window to look for flights so if we say we depart on july 3rd it will look for flights from july 1st to july 3rd that 
-              get us to the destination on july 3rd
+              But im giving the algorithm a 2 day window to look for flights 
+              if we want to arrive at the new destination on july 3rd the departure date from the previous location will
+              be july 3 but the query will find all flights from july 1 to july 3 that can get us to our destination on july 3rd
     
     travelersInput: list[tuple[id: str ,type: int, adultId: "str"]] - the number of travelers on this trip must be between 1-18. 
-                                                                CHILD < 12y, HELD_INFANT < 2y, SEATED_INFANT < 2y, SENIOR >=60y, else adult
+                                                                THE TYPE MUST BE ONE OF THE FOLLOWING
+                                                                CHILD < 12y, HELD_INFANT < 2y, SEATED_INFANT < 2y, SENIOR >=60y, else ADULT
                                                                 There cannot be more then 9 infants as each one must be accompanied by an adult
                                                                 if the traveler is an infant the adultId parameter can be specified with 
                                                                 the id value of an adult traveler to allow the infant to sit in the same seat as the adult
                                                                 otherwise leave adultId as null
 
     sources: str - I have no idea what this is or what is does but this is an required parameter so im setting it to 'GDS' 
-
-    origin: str - The airport you will start your trip at should be in a airport in the IATA Airline and Airport Code specifications 
-                  ex) Lester B. Pearson Internation has the code "YYZ" 
-                  A full list of codes can be found https://www.iata.org/en/publications/directories/code-search/
                                                
-    arrival_flex: int - The flexablity of the arrival times this allows for a range of up to +/- X days around the arrival date (max 3)
-                        This helps expand the number of flights that can be offered in case the dates cannot be lined up exactly
+    maxPriceValue: int - The max price of a flight I have it set to 999999 by default
 
+    refundableFareValue: bool  - If true, returns the flight-offers with refundable fares only
+
+    noRestrictionFareValue: bool - If true, returns the flight-offers with no restriction fares only
      
+    noPenaltyFareValue: bool - If true, returns the flight-offers with no penalty fares only
 
+    excludedCarrierCodesValue: list[str] - This option ensures that the system will only consider these airlines.
+                                           MAX length 99 
+                                           Uses IATA codes to specify airlines
+                                           A full list of codes can be found https://www.iata.org/en/publications/directories/code-search/
+
+    includedCarrierCodesValue: list[str] - This option ensures that the system will only consider these airlines.
+                                           MAX length 99 
+                                           Uses IATA codes to specify airlines
+                                           A full list of codes can be found https://www.iata.org/en/publications/directories/code-search/
+
+    nonStopPreferredValue: bool - When this option is requested, recommendations made of Non-Stop flights only are favoured by the search, 
+                                  on the whole itinerary, with a weight of 75%.
 
 @returns
 */
-export function flight_offer_helper(
-    currency = "USD",
+export function flightOfferHelper(
     locations,
     travelersInput,
+    currency = "USD",
     sourcesValue = ["GDS"],
     //searchCriteria
-    maxPriceValue = 999999
+    maxPriceValue = 999999,
     //pricingOptions
-    refundableFareValue = null
-    noRestrictionFareValue = null
-    noPenaltyFareValue = null
+    refundableFareValue = null,
+    noRestrictionFareValue = null,
+    noPenaltyFareValue = null,
     //flightFilters
-    excludedCarrierCodesValue = null
-    includedCarrierCodesValue = null
+    excludedCarrierCodesValue = null,
+    includedCarrierCodesValue = null,
     nonStopPreferredValue = null
 ) {
     let flight_json
@@ -115,16 +134,13 @@ export function flight_offer_helper(
     let homeAirport = locations[0]
     let tripItinerary = []
     //Handles the first location in the trip
-    firstFlight = {
+    let firstFlight = {
         "id": '1',
         "originLocationCode": locations[0][0],
-        "destinationLocationCode": location[1][0],
-        "departureDateTimeRange": {
-            "date": locations[0][1],
-            "dateWindow": "M2D"
-        },
+        "destinationLocationCode": locations[1][0],
         "arrivalDateTimeRange": {
-            "date": location[1][1]
+            "date": locations[1][1],
+            "dateWindow": "I3D"
         }
     }
     //Add flight from home airport to first destination
@@ -135,12 +151,9 @@ export function flight_offer_helper(
             "id": String(i),
             "originLocationCode": String(locations[i - 1][0]),
             "destinationLocationCode": String(locations[i][0]),
-            "departureDateTimeRange": {
-                "date": locations[i][1],
-                "dateWindow": "M2D"
-            },
             "arrivalDateTimeRange": {
-                "date": location[i][1]
+                "date": locations[i][1],
+                "dateWindow": "I3D"
             }
         }
         tripItinerary.push(locationData)
@@ -149,12 +162,12 @@ export function flight_offer_helper(
 
     let travelersList = []
 
-    for (person in travelersInput) {
+    for (let person of travelersInput) {
         let individual
         let idValue = person[0]
         let type = person[1]
         let assAdultId = person[2]
-
+        //debugger
         if (isNotNullNorUndefined(assAdultId)) {
             individual = {
                 "id": String(idValue),
@@ -237,24 +250,40 @@ This is the function called to get flight offers
 
 @returns
 */
-export async function flight_offer(
-    flightSearchJSON, 
-) {
-    const post_extension = "/shopping/flight-offers"
+export async function flightOffer(flightSearchJSON, token) {
+    const postExtension = "/shopping/flight-offers";
     try {
-        const response = await fetch(`${base_url}${post_extension}`, {
+        const response = await fetch(`${base_url}${flight_version}${postExtension}`, {
             method: "POST",
-            headers: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token.access_token}`,
+                "X-HTTP-Method-Override": "GET",
+            },
             body: JSON.stringify(flightSearchJSON),
-        })
+        });
+
+        // Check if the response is OK (status 2xx)
+        if (!response.ok) {
+            // Log the status and the response text to get more context on the error
+            const errorText = await response.text();
+            throw new Error(`Failed to fetch flight offers, status: ${response.status}, message: ${errorText}`);
+        }
+
+        // Parse the response as JSON
+        const flightOffers = await response.json();
+        console.log('Flight Offers:', flightOffers);
+        return flightOffers;
+
     } catch (error) {
-        console.error("Failed to get the thing sorry", error)
-        return null
+        // Log the error with the detailed message
+        console.error("Failed to get the flight offers:", error.message || error);
+        return null;  // Return null if the request fails
     }
 }
 
-export async function choice_Predict(
+export async function hotelOffer(
 
 ) {
-
+    const hotelExtension = "/shopping/hotel-offers"
 }
