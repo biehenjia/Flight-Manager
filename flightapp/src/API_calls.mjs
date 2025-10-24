@@ -71,8 +71,7 @@ The purpose of this function is to properly formate the json object to feed into
               ex) Lester B. Pearson Internation has the code "YYZ" 
               A full list of codes can be found https://www.iata.org/en/publications/directories/code-search/
               Dates are strings formatted "YYYY-MM-DD""
-              The departure day of the previous destination will be the same as the arival date of the new 
-              But im giving the algorithm a 2 day window to look for flights 
+              But im giving the algorithm a 3 day window to look for flights 
               if we want to arrive at the new destination on july 3rd the departure date from the previous location will
               be july 3 but the query will find all flights from july 1 to july 3 that can get us to our destination on july 3rd
     
