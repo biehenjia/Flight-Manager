@@ -1,6 +1,10 @@
 import React from 'react'
 import './globals.css'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+
+import UserTest from './components/UserTest'
+
+
 import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import Flights from './pages/Flights'
@@ -20,6 +24,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <UserTest />
       </div>
     </BrowserRouter>
   )
