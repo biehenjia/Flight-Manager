@@ -1,0 +1,19 @@
+.navbar {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.nav-link {
+  margin-right: 1rem;
+  text-decoration: none;
+  color: #333;
+}
+
+.nav-link:last-child {
+  margin-right: 0;
+}
+
+.nav-link.active {
+  color: #0077cc;
+  font-weight: 600;
+}
