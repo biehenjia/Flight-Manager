@@ -1,8 +1,15 @@
+import Amadeus from "amadeus";
+
 const api_key = process.env.FLIGHT_API_KEY
 const api_secret = process.env.API_SECRET
-const base_url = process.env.BASE_URL 
+const base_url = process.env.BASE_URL
 const flight_version = process.env.VERSION_FLIGHT
 const hotel_version = process.env.VERSION_HOTEL
+
+const amadeus = new Amadeus({
+    clientId: api_key,
+    clientSecret: api_secret,
+});
 
 /*
 Before we can make API calls we must must get the access tokens
@@ -312,7 +319,7 @@ export async function flightOffer(flightSearchJSON, token) {
 
         // Parse the response as JSON
         const flightOffers = await response.json();
-        console.log('Flight Offers:', flightOffers);
+        // console.log('Flight Offers:', flightOffers);
         return flightOffers;
 
     } catch (error) {
@@ -322,6 +329,7 @@ export async function flightOffer(flightSearchJSON, token) {
     }
 }
 
+<<<<<<< HEAD
 export async function hotelOffer(
     token
 ) {
@@ -353,5 +361,27 @@ export async function hotelOffer(
         // Log the error with the detailed message
         console.error("Failed to get the flight offers:", error.message || error);
         return null;  // Return null if the request fails
+=======
+/*
+This is the function called to get hotel offers by city code
+
+@params 
+
+@returns
+*/
+
+export async function hotelOfferByCity(cityCode) {
+    try {
+        // List of hotels in Paris
+            const response = await amadeus.referenceData.locations.hotels.byCity.get({
+            cityCode: cityCode,
+        });
+
+        return response.data;
+
+    } catch (error) {
+        console.error("Failed to get the hotel offers:", error.message || error);
+        return null;
+>>>>>>> 58ff9821cdcdb7e455bda2af2c1e877c03345a27
     }
 }
