@@ -39,31 +39,31 @@ async function getValidToken() {
     }
 }
 
+async function debugFlightOffer(token) {
 
+    // Now proceed with making the flight offer request
+    let locations1 = [["YYZ", "2025-11-12"], ["JFK", "2025-11-14"]];
+    let peoples = [["1", "ADULT", null]];
 
-        // Now proceed with making the flight offer request
-        let locations1 = [["YYZ", "2025-11-12"], ["JFK", "2025-11-14"]];
-        let peoples = [["1", "ADULT", null]];
+    let flightTest = {
+        "locations": locations1,
+        "travelersInput": peoples,
+        "currency": null,
+        "sourcesValue": null,
+        "maxPriceValue": null,
+        "refundableFareValue": null,
+        "noRestrictionFareValue": null,
+        "noPenaltyFareValue": null,
+        "excludedCarrierCodesValue": null,
+        "includedCarrierCodesValue": null,
+        "nonStopPreferredValue": null
+    }
 
-        let flightTest = {
-            "locations": locations1,
-            "travelersInput": peoples,
-            "currency": null,
-            "sourcesValue": null,
-            "maxPriceValue": null,
-            "refundableFareValue": null,
-            "noRestrictionFareValue": null,
-            "noPenaltyFareValue": null,
-            "excludedCarrierCodesValue": null,
-            "includedCarrierCodesValue": null,
-            "nonStopPreferredValue": null
-        }
-
-        // Prepare the flight search data
-        let flightJSON = flightOfferHelper(flightTest);
-        console.log(flightJSON)
-        // Make the flight offer request
-        const returnJSON = await flightOffer(flightJSON, token);
+    // Prepare the flight search data
+    let flightJSON = flightOfferHelper(flightTest);
+    console.log(flightJSON)
+    // Make the flight offer request
+    const returnJSON = await flightOffer(flightJSON, token);
 
     if (!returnJSON) {
         console.error("No flight offers returned.");
