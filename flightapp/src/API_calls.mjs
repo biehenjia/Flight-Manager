@@ -329,39 +329,6 @@ export async function flightOffer(flightSearchJSON, token) {
     }
 }
 
-<<<<<<< HEAD
-export async function hotelOffer(
-    token
-) {
-    const hotelExtension = "/shopping/hotel-offers"
-    try {
-        const response = await fetch(`${base_url}${flight_version}${postExtension}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token.access_token}`,
-                "X-HTTP-Method-Override": "GET",
-            },
-            body: JSON.stringify(flightSearchJSON),
-        });
-
-        // Check if the response is OK (status 2xx)
-        if (!response.ok) {
-            // Log the status and the response text to get more context on the error
-            const errorText = await response.text();
-            throw new Error(`Failed to fetch flight offers, status: ${response.status}, message: ${errorText}`);
-        }
-
-        // Parse the response as JSON
-        const flightOffers = await response.json();
-        console.log('Flight Offers:', flightOffers);
-        return flightOffers;
-
-    } catch (error) {
-        // Log the error with the detailed message
-        console.error("Failed to get the flight offers:", error.message || error);
-        return null;  // Return null if the request fails
-=======
 /*
 This is the function called to get hotel offers by city code
 
@@ -382,6 +349,5 @@ export async function hotelOfferByCity(cityCode) {
     } catch (error) {
         console.error("Failed to get the hotel offers:", error.message || error);
         return null;
->>>>>>> 58ff9821cdcdb7e455bda2af2c1e877c03345a27
     }
 }
