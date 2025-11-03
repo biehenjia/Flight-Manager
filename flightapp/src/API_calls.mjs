@@ -61,7 +61,24 @@ function isNotNullNorUndefined(
 This is the helper function associcated with the flight offer API call
 The purpose of this function is to properly formate the json object to feed into the flight_offer function
 
-@params
+@params Takes a single JSON object with the following 
+
+    {
+    locations*
+    travelersInput*
+    currency
+    sourcesValue
+    maxPriceValue
+    refundableFareValue
+    noRestrictionFareValue
+    noPenaltyFareValue
+    excludedCarrierCodesValue
+    includedCarrierCodesValue
+    nonStopPreferredValue
+    }
+
+    VALUES WITH * ARE REQURED OTHER INPUTS HAVE DEFAULT ARGUMENTS PROVIDED
+
     currency: str - The currency code, as defined in ISO 4217, to reflect the currency in which this amount is expressed.
                     By default USD is assumed
 
@@ -109,6 +126,7 @@ The purpose of this function is to properly formate the json object to feed into
 @returns
 */
 export function flightOfferHelper(
+    /*
     locations,
     travelersInput,
     currency = "USD",
@@ -123,35 +141,42 @@ export function flightOfferHelper(
     excludedCarrierCodesValue = null,
     includedCarrierCodesValue = null,
     nonStopPreferredValue = null
+    */
+   flightInfo
 ) {
     let flight_json
     let pricingOptionsIncluded = false
     let flightFiltersIncluded = false
     let connectionRestrictionIncluded = false
+    let money = "USD"
+    let source = ["GDS"]
+    let maxPrice = 999999
     //REQUIRED VALUES SECTION
 
-    let homeAirport = locations[0]
+    //GENERATES THE TRIP LOCATION INPUT
+
+    let homeAirport = flightInfo.locations[0]
     let tripItinerary = []
     //Handles the first location in the trip
     let firstFlight = {
         "id": '1',
-        "originLocationCode": locations[0][0],
-        "destinationLocationCode": locations[1][0],
+        "originLocationCode": flightInfo.locations[0][0],
+        "destinationLocationCode": flightInfo.locations[1][0],
         "arrivalDateTimeRange": {
-            "date": locations[1][1],
+            "date": flightInfo.locations[1][1],
             "dateWindow": "I3D"
         }
     }
     //Add flight from home airport to first destination
     tripItinerary.push(firstFlight)
 
-    for (let i = 2; i < locations.length; i++) {
+    for (let i = 2; i < flightInfo.locations.length; i++) {
         let locationData = {
             "id": String(i),
-            "originLocationCode": String(locations[i - 1][0]),
-            "destinationLocationCode": String(locations[i][0]),
+            "originLocationCode": String(flightInfo.locations[i - 1][0]),
+            "destinationLocationCode": String(flightInfo.locations[i][0]),
             "arrivalDateTimeRange": {
-                "date": locations[i][1],
+                "date": flightInfo.locations[i][1],
                 "dateWindow": "I3D"
             }
         }
@@ -159,9 +184,10 @@ export function flightOfferHelper(
 
     }
 
+    //GENERATES TRAVELERS LIST INPUT
     let travelersList = []
 
-    for (let person of travelersInput) {
+    for (let person of flightInfo.travelersInput) {
         let individual
         let idValue = person[0]
         let type = person[1]
@@ -182,29 +208,44 @@ export function flightOfferHelper(
         travelersList.push(individual)
     }
 
+    //OPTIONAL VALUES
+
+    //GENERATES CURRENCY DEFAULTS TO USD
+    if (isNotNullNorUndefined(flightInfo.currency)) {
+        money = flightInfo.currency
+    }
+    //GENERATES SOURCES DEFAULTS TO ['GSD']
+    if (isNotNullNorUndefined(flightInfo.sourcesValue)) {
+        source = flightInfo.sourcesValue
+    }
+    //GENERATES MAX PRICE
+    if (isNotNullNorUndefined(flightInfo.maxPriceValue)) {
+        maxPrice = flightInfo.maxPriceValue
+    }
+
+    //Sets values in JSON obj
     flight_json = {
-        "currencyCode": currency,
+        "currencyCode": money,
         "originDestinations": tripItinerary,
         "travelers": travelersList,
-        "sources": sourcesValue,
+        "sources": source,
         "searchCriteria": {
-            "maxPrice": maxPriceValue,
+            "maxPrice": maxPrice,
         }
     }
 
-    //OPTIONAL VALUES
     let pricingOptionsJSON = {}
-    if (isNotNullNorUndefined(refundableFareValue)) {
+    if (isNotNullNorUndefined(flightInfo.refundableFareValue)) {
         pricingOptionsJSON.refundableFare = refundableFareValue
         pricingOptionsIncluded = true
     }
 
-    if (isNotNullNorUndefined(noRestrictionFareValue)) {
+    if (isNotNullNorUndefined(flightInfo.noRestrictionFareValue)) {
         pricingOptionsJSON.noRestrictionFare = noRestrictionFareValue
         pricingOptionsIncluded = true
     }
 
-    if (isNotNullNorUndefined(noPenaltyFareValue)) {
+    if (isNotNullNorUndefined(flightInfo.noPenaltyFareValue)) {
         pricingOptionsJSON.noPenaltyFare = noPenaltyFareValue
         pricingOptionsIncluded = true
     }
@@ -216,12 +257,12 @@ export function flightOfferHelper(
 
 
     let carrierRestrictionsJSON = {}
-    if (isNotNullNorUndefined(excludedCarrierCodesValue)) {
+    if (isNotNullNorUndefined(flightInfo.excludedCarrierCodesValue)) {
         carrierRestrictionsJSON.excludedCarrierCodes = excludedCarrierCodesValue
         flightFiltersIncluded = true
     }
 
-    if (isNotNullNorUndefined(includedCarrierCodesValue)) {
+    if (isNotNullNorUndefined(flightInfo.includedCarrierCodesValue)) {
         carrierRestrictionsJSON.includedCarrierCodes = includedCarrierCodesValue
         flightFiltersIncluded = true
     }
@@ -231,7 +272,7 @@ export function flightOfferHelper(
     }
 
     let connectionRestrictionJSON = {}
-    if (isNotNullNorUndefined(nonStopPreferredValue)) {
+    if (isNotNullNorUndefined(flightInfo.nonStopPreferredValue)) {
         connectionRestrictionJSON.nonStopPreferred = nonStopPreferredValue
         connectionRestrictionIncluded = true
     }
@@ -282,7 +323,35 @@ export async function flightOffer(flightSearchJSON, token) {
 }
 
 export async function hotelOffer(
-
+    token
 ) {
     const hotelExtension = "/shopping/hotel-offers"
+    try {
+        const response = await fetch(`${base_url}${flight_version}${postExtension}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token.access_token}`,
+                "X-HTTP-Method-Override": "GET",
+            },
+            body: JSON.stringify(flightSearchJSON),
+        });
+
+        // Check if the response is OK (status 2xx)
+        if (!response.ok) {
+            // Log the status and the response text to get more context on the error
+            const errorText = await response.text();
+            throw new Error(`Failed to fetch flight offers, status: ${response.status}, message: ${errorText}`);
+        }
+
+        // Parse the response as JSON
+        const flightOffers = await response.json();
+        console.log('Flight Offers:', flightOffers);
+        return flightOffers;
+
+    } catch (error) {
+        // Log the error with the detailed message
+        console.error("Failed to get the flight offers:", error.message || error);
+        return null;  // Return null if the request fails
+    }
 }

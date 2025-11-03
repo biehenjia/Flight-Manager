@@ -51,11 +51,25 @@ async function main() {
         }
 
         // Now proceed with making the flight offer request
-        let locations1 = [["YYZ", "2025-11-01"], ["JFK", "2025-11-01"]];
+        let locations1 = [["YYZ", "2025-11-12"], ["JFK", "2025-11-14"]];
         let peoples = [["1", "ADULT", null]];
 
+        let flightTest = {
+            "locations": locations1,
+            "travelersInput": peoples,
+            "currency": null,
+            "sourcesValue": null,
+            "maxPriceValue": null,
+            "refundableFareValue": null,
+            "noRestrictionFareValue": null,
+            "noPenaltyFareValue": null,
+            "excludedCarrierCodesValue": null,
+            "includedCarrierCodesValue": null,
+            "nonStopPreferredValue": null
+        }
+
         // Prepare the flight search data
-        let flightJSON = flightOfferHelper(locations1, peoples);
+        let flightJSON = flightOfferHelper(flightTest);
         console.log(flightJSON)
         // Make the flight offer request
         const returnJSON = await flightOffer(flightJSON, token);
