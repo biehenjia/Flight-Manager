@@ -17,6 +17,10 @@ export default function Navbar() {
       <NavLink to="/about" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
         About
       </NavLink>
+
+      <NavLink to="/PaypalPaymentTest" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+        PaypalPaymentTest
+      </NavLink>
     </nav>
   )
 }
