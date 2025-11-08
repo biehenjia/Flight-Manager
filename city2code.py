@@ -17,7 +17,7 @@ airport_types = ["small_airport", "medium_airport", "large_airport"]
 
 def cleaning(df, types):
     """filter airports by type"""
-    return df.loc[df["type"].isin(types)]
+    return df.loc[df["type"].isin(types) & (df['iata_code'].isna() == False )]
 
 
 def strip_text(text):
@@ -38,7 +38,7 @@ def get_city(city):
 def find_ident(city, airports):
     """find airport identifiers for a given city"""
     nearby_airports = airports[airports["stripped_city"] == city]
-    return nearby_airports["ident"].tolist()
+    return nearby_airports["iata_code"].tolist()
 
 def main():
     """run program"""
@@ -52,3 +52,4 @@ def main():
 
 idents = main()
 print(idents)
+
