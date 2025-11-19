@@ -40,16 +40,13 @@ def find_ident(city, airports):
     nearby_airports = airports[airports["stripped_city"] == city]
     return nearby_airports["iata_code"].tolist()
 
-def main():
+def main(city=None):
     """run program"""
     # clean dataset
     airports = cleaning(all_airports, airport_types)
     # strip municipality column
     airports["stripped_city"] = airports["municipality"].apply(strip_text)
-    city = None
     city = get_city(city)
     return find_ident(city, airports)
 
-idents = main()
-print(idents)
 
