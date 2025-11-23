@@ -42,7 +42,7 @@ async function getValidToken() {
 async function debugFlightOffer(token) {
 
     // Now proceed with making the flight offer request
-    let locations1 = [["YYZ", "2025-11-12"], ["JFK", "2025-11-14"]];
+    let locations1 = [["YYZ", "2025-11-21"], ["YOW", "2025-11-21"]];
     let peoples = [["1", "ADULT", null]];
 
     let flightTest = {
@@ -69,9 +69,8 @@ async function debugFlightOffer(token) {
         console.error("No flight offers returned.");
         return;
     }
-    debugger
     // Log the flight offers
-    console.log("Flight offers:", JSON.toString(returnJSON));
+    console.log("Flight offers:", JSON.stringify(returnJSON));
 }
 
 // debug Hotel Offer
@@ -85,9 +84,8 @@ async function debughotelOfferByCity(cityCode) {
         console.error("No hotel offers returned.");
         return;
     }
-    debugger
     // Log the Hotel offers
-    console.log("Hotel offers:", JSON.toString(returnJSON));
+    console.log("Hotel offers:", JSON.stringify(returnJSON));
 }
 
 // Main function to demonstrate the flow
