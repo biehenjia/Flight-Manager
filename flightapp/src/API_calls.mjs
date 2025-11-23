@@ -1,15 +1,8 @@
-import Amadeus from "amadeus";
-
-const api_key = process.env.FLIGHT_API_KEY
-const api_secret = process.env.API_SECRET
-const base_url = process.env.BASE_URL
-const flight_version = process.env.VERSION_FLIGHT
-const hotel_version = process.env.VERSION_HOTEL
-
-const amadeus = new Amadeus({
-    clientId: api_key,
-    clientSecret: api_secret,
-});
+const api_key = import.meta.env.VITE_FLIGHT_API_KEY
+const api_secret = import.meta.env.VITE_API_SECRET
+const base_url = import.meta.env.VITE_BASE_URL
+const flight_version = import.meta.env.VITE_VERSION_FLIGHT
+const hotel_version = import.meta.env.VITE_VERSION_HOTEL
 
 /*
 Before we can make API calls we must must get the access tokens
@@ -305,7 +298,6 @@ export async function flightOffer(flightSearchJSON, token) {
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token.access_token}`,
-                "X-HTTP-Method-Override": "GET",
             },
             body: JSON.stringify(flightSearchJSON),
         });
@@ -337,17 +329,69 @@ This is the function called to get hotel offers by city code
 @returns
 */
 
+
+// IMPORTANT NOTE FOR HOTEL SEARCH: !!!!!!!!
+// basically you need to first search to discover an area or hotel by chain (which is more cumbersone)
+// abd then you get a list of valid hotels by id that you can find
+// idk why this is the case but amadeus chose to do it like this
 export async function hotelOfferByCity(cityCode) {
     try {
-        // List of hotels in Paris
-            const response = await amadeus.referenceData.locations.hotels.byCity.get({
-            cityCode: cityCode,
-        });
+        const token = await getToken()
+        if (!token) return []
 
-        return response.data;
+        const discoveryUrl = `${base_url}/v1/reference-data/locations/hotels/by-city?cityCode=${encodeURIComponent(cityCode)}&radius=5&radiusUnit=KM&hotelSource=ALL`
+        const resp = await fetch(discoveryUrl, { headers: { Authorization: `Bearer ${token.access_token}` } })
+        if (!resp.ok) return []
+        const json = await resp.json().catch(() => null)
+        const candidates = (json && (json.data || json.hotels || json.results || json)) || []
+        return Array.isArray(candidates)
+            ? candidates.map(i => i?.hotel?.hotelId || i?.hotelId || i?.id).filter(Boolean)
+            : []
+    } catch (e) {
+        return []
+    }
+}
 
-    } catch (error) {
-        console.error("Failed to get the hotel offers:", error.message || error);
-        return null;
+export async function hotelsSearch({ location, checkIn, checkOut, adults = 1, max = 10 }) {
+    try {
+        if (!location || !checkIn || !checkOut) throw new Error('location, checkIn, checkOut required')
+        const token = await getToken()
+        if (!token) throw new Error('Failed to get token')
+
+        const cityCode = /^[A-Za-z]{3}$/.test(location) ? location.toUpperCase() : null
+        if (!cityCode) throw new Error('Only 3-letter city codes supported (e.g. PAR)')
+
+        // discovery
+        const discoveryUrl = `${base_url}/v1/reference-data/locations/hotels/by-city?cityCode=${encodeURIComponent(cityCode)}&radius=5&radiusUnit=KM&hotelSource=ALL`;
+        const discResp = await fetch(discoveryUrl, { headers: { Authorization: `Bearer ${token.access_token}` } });
+        const discText = await discResp.text();
+        let discJson = null;
+        try { discJson = discText ? JSON.parse(discText) : null } catch { discJson = discText }
+        if (!discResp.ok) {
+            throw new Error(`Discovery failed: ${discResp.status} ${discText}`)
+        }
+
+        const candidates = discJson && (discJson.data || discJson.hotels || discJson.results || discJson) || []
+        const hotelIds = Array.isArray(candidates)
+            ? candidates.map(item => (item?.hotel?.hotelId || item?.hotelId || item?.id)).filter(Boolean)
+            : []
+
+        if (!hotelIds.length) return { data: [] }
+
+        // always cap to 10 results
+        const limit = Math.min(10, Math.max(1, Number(max || 10)))
+        const idsToUse = hotelIds.slice(0, Math.min(hotelIds.length, limit))
+        const hotelIdsParam = idsToUse.join(',')
+
+        const q = new URLSearchParams({ hotelIds: hotelIdsParam, checkInDate: checkIn, checkOutDate: checkOut, adults: String(adults) })
+        q.set('page[limit]', String(limit))
+        const v3Url = `${base_url}/v3/shopping/hotel-offers?${q.toString()}`
+        const v3Resp = await fetch(v3Url, { headers: { Authorization: `Bearer ${token.access_token}`, 'Content-Type': 'application/json' } })
+        if (!v3Resp.ok) return { data: [] }
+        const v3Json = await v3Resp.json().catch(() => null)
+        if (v3Json && Array.isArray(v3Json.data)) v3Json.data = v3Json.data.slice(0, limit)
+        return v3Json || { data: [] }
+    } catch (err) {
+        return { data: [] }
     }
 }

@@ -12,6 +12,7 @@
     "@paypal/react-paypal-js": "^8.9.2",
     "amadeus": "^11.0.0",
     "firebase": "^12.4.0",
+    "google-auth-library": "^10.5.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.4",
