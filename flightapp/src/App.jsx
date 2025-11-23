@@ -13,6 +13,7 @@ import TripPlanner from './pages/TripPlanner'
 import Bookings from './pages/Bookings'
 import Profile from './pages/Profile'
 import About from './pages/About'
+import Chat from './pages/Chat'
 import NotFound from './pages/NotFound'
 import OnSuccessfulPayment from './pages/Payment/OnSuccessfulPayment'
 import OnFailedPayment from './pages/Payment/OnFailedPayment'
@@ -34,6 +35,7 @@ function App() {
           <Route path="/flights" element={<Flights />} />
           <Route path="/trip" element={<TripPlanner />} />
           <Route path="/hotels" element={<Hotels />} />
+          <Route path="/chat" element={<Chat />} />
           <Route path="/bookings" element={<Bookings />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/about" element={<About />} />

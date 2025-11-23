@@ -35,8 +35,7 @@ export async function getToken(
         }
 
         const token = await response.json()
-        console.log(token)
-        return (token)
+        return token
 
     } catch (error) {
         console.error("Failed to fetch token", error)

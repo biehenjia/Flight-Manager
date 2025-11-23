@@ -9,15 +9,8 @@ async function initializeToken() {
         // Fetch the token from your function (assumes it's async)
         currentToken = await getToken();
 
-        if (currentToken) {
-            // Set the expiry time (typically expires_in is in seconds)
-            tokenExpiryTime = Date.now() + currentToken.expires_in * 1000;
-            console.log("Token successfully fetched:", currentToken.access_token);
-            return currentToken;
-        } else {
-            console.error("Failed to fetch token.");
-            return null;
-        }
+        if (currentToken) { tokenExpiryTime = Date.now() + currentToken.expires_in * 1000; return currentToken }
+        return null
     } catch (error) {
         // Handle any errors that occur during the token fetch process
         console.error("Error in fetching token:", error.message || error);
@@ -28,10 +21,7 @@ async function initializeToken() {
 // Function to get a valid token (if expired, re-fetch it)
 async function getValidToken() {
     try {
-        if (!currentToken || Date.now() >= tokenExpiryTime) {
-            console.log("Token expired or not available, fetching a new one...");
-            return await initializeToken();  // Re-fetch the token
-        }
+        if (!currentToken || Date.now() >= tokenExpiryTime) return await initializeToken();
         return currentToken;
     } catch (error) {
         console.error("Error in getting a valid token:", error.message || error);
@@ -61,17 +51,8 @@ async function debugFlightOffer(token) {
 
     // Prepare the flight search data
     let flightJSON = flightOfferHelper(flightTest);
-    console.log(flightJSON)
-    // Make the flight offer request
     const returnJSON = await flightOffer(flightJSON, token);
-
-    if (!returnJSON) {
-        console.error("No flight offers returned.");
-        return;
-    }
-    debugger
-    // Log the flight offers
-    console.log("Flight offers:", JSON.toString(returnJSON));
+    if (!returnJSON) return;
 }
 
 // debug Hotel Offer
@@ -81,13 +62,7 @@ async function debughotelOfferByCity(cityCode) {
     // Make the hotel offer request
     const returnJSON = await hotelOfferByCity(cityCode);
 
-    if (!returnJSON) {
-        console.error("No hotel offers returned.");
-        return;
-    }
-    debugger
-    // Log the Hotel offers
-    console.log("Hotel offers:", JSON.toString(returnJSON));
+    if (!returnJSON) return;
 }
 
 // Main function to demonstrate the flow
@@ -96,20 +71,14 @@ async function main() {
         // Ensure the token is valid (or fetch a new one if necessary)
         const token = await getValidToken();
 
-        if (!token) {
-            console.error("Could not obtain a valid token.");
-            return; // Exit if the token is not available
-        }
+        if (!token) return;
 
         debugFlightOffer(token)
 
         let cityCode = "PAR" // PAR for Paris
         debughotelOfferByCity(cityCode)
 
-    } catch (error) {
-        // Handle any errors in the main flow
-        console.error("Error in main function:", error.message || error);
-    }
+    } catch (error) {}
 }
 
 // Run the main function

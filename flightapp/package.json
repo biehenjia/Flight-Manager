@@ -3,12 +3,15 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/start-dev.js",
+    "dev:serve": "vite",
+    "chat-server": "node chat-server.js",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "ws": "^8.13.0",
     "@paypal/react-paypal-js": "^8.9.2",
     "amadeus": "^11.0.0",
     "firebase": "^12.4.0",

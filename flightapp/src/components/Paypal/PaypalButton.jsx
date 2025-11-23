@@ -29,10 +29,7 @@ const PayPalButton = () => {
             });
           }}
           onApprove={(data, actions) => {
-            return actions.order.capture().then((details) => {
-              console.log("Payment success:", details);
-              navigate("../OnSuccessfulPayment"); // redirect to success page
-            });
+            return actions.order.capture().then(() => navigate("../OnSuccessfulPayment"));
           }}
           onError={(err) => {
             console.error("PayPal Checkout Error:", err);
